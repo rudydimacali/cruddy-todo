@@ -21,11 +21,18 @@ exports.create = (text, callback) => {
 };
 
 exports.readAll = (callback) => {
+  // _.each(items, (text, id) => {
+  //   data.push({ id, text });
+  // });
+  
+  // TODO: Refactor with promises.
   var data = [];
-  _.each(items, (text, id) => {
-    data.push({ id, text });
+  fs.readdir(this.dataDir, (err, files) => {
+    _.each(files, (text, id) => {
+      data.push({id, text});
+    });
+    callback(null, data);
   });
-  callback(null, data);
 };
 
 exports.readOne = (id, callback) => {

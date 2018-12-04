@@ -52,7 +52,7 @@ exports.getNextUniqueId = (callback) => {
         if (err) {
           throw('Unable to write to file.');
         } else {
-          console.log("Successfully wrote to file.");
+          console.log(zeroPaddedNumber(counter));
           if (callback) {
             callback(null, zeroPaddedNumber(counter));
           }
