@@ -36,10 +36,31 @@ const writeCounter = (count, callback) => {
   });
 };
 
+
 // Public API - Fix this function //////////////////////////////////////////////
 
-exports.getNextUniqueId = () => {
-  counter = counter + 1;
+exports.getNextUniqueId = (callback) => {
+  // Read from the file
+  // set counter === to data + 1
+  readCounter((err, data) => {
+    if (err) {
+      throw 'Unable to read from file.';
+    } else {
+      counter = (data + 1);
+      // Write data + 1 to the file
+      writeCounter(counter, (err) => {
+        if (err) {
+          throw('Unable to write to file.');
+        } else {
+          console.log("Successfully wrote to file.");
+          if (callback) {
+            callback(null, zeroPaddedNumber(counter));
+          }
+        }
+      });
+    }
+  });
+  
   return zeroPaddedNumber(counter);
 };
 
