@@ -9,7 +9,7 @@ var items = {};
 
 exports.create = (text, callback) => {
   counter.getNextUniqueId((err, id) => {
-    fs.writeFile((`${this.dataDir}` + '/' + `${id}.txt`), text,
+    fs.writeFile((`${this.dataDir}/${id}.txt`), text,
       (err) => {
         if (err) {
           throw ('Error creating file.');
@@ -28,30 +28,52 @@ exports.readAll = (callback) => {
   // TODO: Refactor with promises.
   var data = [];
   fs.readdir(this.dataDir, (err, files) => {
-    _.each(files, (text, id) => {
-      data.push({id, text});
-    });
-    callback(null, data);
+    if (err) {
+      throw ('Error reading files.');
+    } else {
+      _.each(files, (text, id) => {
+        text = text.split('.')[0];
+        id = text;
+        data.push({id, text});
+      });
+      callback(null, data);
+    }
   });
 };
 
 exports.readOne = (id, callback) => {
-  var text = items[id];
-  if (!text) {
-    callback(new Error(`No item with id: ${id}`));
-  } else {
-    callback(null, { id, text });
-  }
+  fs.readFile(`${this.dataDir}/${id}.txt`, 'utf8', (err, data) => {
+    if (err) {
+      callback(err);
+    } else {
+      callback(null, {id: id, text: data});
+    }
+  });
 };
 
 exports.update = (id, text, callback) => {
-  var item = items[id];
-  if (!item) {
-    callback(new Error(`No item with id: ${id}`));
-  } else {
-    items[id] = text;
-    callback(null, { id, text });
-  }
+  exports.readOne(id, (err, data) => {
+    if (err) {
+      callback(err);
+    } else {
+      fs.writeFile((`${this.dataDir}/${id}.txt`), text,
+        (err) => {
+          if (err) {
+            throw ('Error creating file.');
+          } else if (callback) {
+            callback(null, { id, text });
+          }
+        });
+    }
+  });
+
+//   var item = items[id];
+//   if (!item) {
+//     callback(new Error(`No item with id: ${id}`));
+//   } else {
+//     items[id] = text;
+//     callback(null, { id, text });
+//   }
 };
 
 exports.delete = (id, callback) => {
