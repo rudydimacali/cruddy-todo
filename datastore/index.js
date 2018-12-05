@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const _ = require("underscore");
 const counter = require("./counter");
+const Promise = require("bluebird");
 
 var items = {};
 
@@ -20,47 +21,22 @@ exports.create = (text, callback) => {
 };
 
 exports.readAll = callback => {
-  // _.each(items, (text, id) => {
-  //   data.push({ id, text });
-  // });
-  // TODO: Refactor with promises.
-  var data = [];
-  let promisedReadDir = function(directory) {
-    return new Promise((resolve, reject) => {
-      fs.readdir(directory, (err, files) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(files);
-        }
-      });
-    });
-  };
-
-  promisedReadDir(this.dataDir)
-    .then(result => {
-      result.map(file => {
-        console.log(file);
-        return new Promise((resolve, reject) => {
-          data.push({ file });
+  var promisedReadOne = Promise.promisify(exports.readOne);
+  fs.readdir(this.dataDir, (err, files) => {
+    if (err) {
+      throw "Error reading files.";
+    } else {
+      var data = _.map(files, file => {
+        let id = path.basename(file, ".txt");
+        return promisedReadOne(id).then(textInFile => {
+          return textInFile;
         });
       });
-    })
-    .then(callback(null, data));
-
-  // var data = [];
-  // fs.readdir(this.dataDir, (err, files) => {
-  //   if (err) {
-  //     throw ('Error reading files.');
-  //   } else {
-  //     _.each(files, (text, id) => {
-  //       text = text.split('.')[0];
-  //       id = text;
-  //       data.push({id, text});
-  //     });
-  //     callback(null, data);
-  //   }
-  // });
+      Promise.all(data).then(items => {
+        callback(null, items);
+      });
+    }
+  });
 };
 
 exports.readOne = (id, callback) => {
